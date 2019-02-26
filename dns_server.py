@@ -41,5 +41,5 @@ class DNSHandler(socketserver.BaseRequestHandler):
         
 if __name__ == "__main__":
     HOST, PORT = "localhost", 53                      
-    server = socketserver.UDPServer((HOST, PORT), DNSHandler)
+    server = socketserver.ThreadingUDPServer((HOST, PORT), DNSHandler)
     server.serve_forever()
