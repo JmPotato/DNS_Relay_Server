@@ -1,6 +1,5 @@
 import struct
 import socket
-import dns.resolver
 
 class DNSResolver():
     def __init__(self, request_data, local_file='dnsrelay.txt', remote_server='223.5.5.5'):
@@ -36,7 +35,6 @@ class DNSResolver():
                     question_qname += chr(i)
                 elif i == 0:
                     break
-            print(count)
             (question_qtype, question_qclass) = struct.unpack('>HH', bytes_data[count:count+4])
             return dict(QNAME=question_qname, QTYPE=question_qtype, QCLASS=question_qclass)
         except:
