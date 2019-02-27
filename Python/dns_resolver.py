@@ -27,12 +27,17 @@ class DNSResolver():
     def parseDNSQuestion(self, bytes_data):
         try:
             question_qname = ''
-            for i in bytes_data[13:-4]:
+            count = 13
+            for i in bytes_data[13:]:
+                count += 1
                 if i < 32 and i != 0:
                     question_qname += '.'
                 elif i != 0:
                     question_qname += chr(i)
-            (question_qtype, question_qclass) = struct.unpack('>HH', bytes_data[-4:])
+                elif i == 0:
+                    break
+            print(count)
+            (question_qtype, question_qclass) = struct.unpack('>HH', bytes_data[count:count+4])
             return dict(QNAME=question_qname, QTYPE=question_qtype, QCLASS=question_qclass)
         except:
             return {}
@@ -65,7 +70,7 @@ class DNSResolver():
         else:
             flags = 33152
             answer = 1
-
+            
         response_data = struct.pack('>HHHHHH', self.request['header']['ID'], flags, self.request['header']['QDCOUNT'], answer, self.request['header']['NSCOUNT'], self.request['header']['ARCOUNT'])
         response_data += bytes(self.request['data'][12:])
         if answer != 0:
@@ -84,7 +89,7 @@ class DNSResolver():
 
     def queryIntegratedServer(self, local_file, remote_server):
         response_data = self.queryLocalServer(local_file)
-        if self.ip_result == '':
+        if self.request['question']['QTYPE'] == 1 and self.ip_result == '':
             response_data = self.queryRemoteServer(remote_server)
 
         return response_data

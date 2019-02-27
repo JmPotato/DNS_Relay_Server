@@ -45,13 +45,22 @@ class DNSHandler(socketserver.BaseRequestHandler):
         request_socket = self.request[1]
 
         dns_server = DNSResolver(request_data, local_file, remote_server)
-        result = struct.unpack('>H', dns_server.response['data'][2:4])[0] & 0x000F
+        __flags__ = struct.unpack('>H', dns_server.response['data'][2:4])[0]
+        flags = {
+            'QR': __flags__ >> 15 & 0x0001,
+            'OPCODE': __flags__ >> 11 & 0x000F,
+            'AA': __flags__ >> 10 & 0x0001,
+            'TC': __flags__ >> 9 & 0x0001,
+            'RD': __flags__ >> 8 & 0x0001,
+            'RA': __flags__ >> 7 & 0x0001,
+            'RCODE': __flags__ & 0x000F
+        }
 
         if output_level == 1:
             print("QNAME: %-s\nQTYPE: %-5s %-5s\tRCODE: %s" % (dns_server.request['question']['QNAME'],
                 dns_server.request['question']['QTYPE'],
                 QTYPE[dns_server.request['question']['QTYPE']],
-                RCODE[result]))
+                RCODE[flags['RCODE']]))
             print("RESULT: %s" % dns_server.response['answer']['ARDATA'])
             print("====================================================================")
         elif output_level == 2:
