@@ -21,6 +21,7 @@ class DNSResolver():
     # 构造函数，初始化数据结构
     def __init__(self, request_data, local_file='dnsrelay.txt', remote_server='223.5.5.5'):
         # 请求报文
+        self.request_data = request_data
         self.request = {
             'data': request_data,
             'flags': self.parseFlags(request_data),
@@ -29,13 +30,13 @@ class DNSResolver():
         }
 
         # 响应报文
-        response_data = self.queryIntegratedServer(local_file, remote_server)
+        self.response_data = self.queryIntegratedServer(local_file, remote_server)
         self.response = {
-            'data': response_data,
-            'flags': self.parseFlags(response_data),
-            'header': self.parseDNSHeader(response_data),
-            'question': self.parseDNSQuestion(response_data),
-            'answer': self.parseDNSAnswer(response_data)
+            'data': self.response_data,
+            'flags': self.parseFlags(self.response_data),
+            'header': self.parseDNSHeader(self.response_data),
+            'question': self.parseDNSQuestion(self.response_data),
+            'answer': self.parseDNSAnswer(self.response_data)
         }
 
     # 翻译状态码
@@ -150,7 +151,7 @@ class DNSResolver():
     # 报文 Answer 解析
     def parseDNSAnswer(self, bytes_data):
         try:
-            if self.response['flags'] == 0:
+            if self.parseFlags(self.response_data)['RCODE'] != 0:
                 return dict(ANAME=0, ATYPE=0, ACLASS=0, ATTL=0, ARDLENGTH=0, ARDATA='0.0.0.0')
             (answer_qtype, answer_qclass, answer_ttl, answer_rdlength, 
             answer_data_1, answer_data_2, answer_data_3, answer_data_4) = struct.unpack('>HHLHBBBB', bytes_data[-14:])

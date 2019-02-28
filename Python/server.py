@@ -42,7 +42,7 @@ class DNSHandler(socketserver.BaseRequestHandler):
             out = "QNAME: %s\nQTYPE: %-5s %-5s\tRCODE: %s\n" % (dns_server.request['question']['QNAME'],
                 dns_server.request['question']['QTYPE'],
                 dns_server.transFlag('TYPE', dns_server.request['question']['QTYPE']),
-                dns_server.transFlag('RCODE', dns_server.request['question']['RCODE']))
+                dns_server.transFlag('RCODE', dns_server.request['flags']['RCODE']))
             out += "RESULT: %s\n" % dns_server.response['answer']['ARDATA']
             out += "====================================================================\n"
         elif output_level == 2:
