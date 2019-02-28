@@ -142,7 +142,10 @@ void creat_msg_manully(char *buf, char *ip)
 {
     dnsHeader *header = (dnsHeader *)buf;
     dnsRR *rr;
-    header->flags = htons(0x8180);
+    if (*ip == (char)0 && *(ip + 1) == (char)0 && *(ip + 2) == (char)0 && *(ip + 3) == (char)0)
+        header->flags = htons(0x8183);
+    else
+        header->flags = htons(0x8180);
     header->ansNumber = htons(1);
     char *dn = buf + sizeof(dnsHeader);
     //printf("%lu\n", strlen(dn));
