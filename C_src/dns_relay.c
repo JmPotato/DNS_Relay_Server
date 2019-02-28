@@ -48,6 +48,16 @@ typedef struct DNSQUERY
     unsigned short classes;
 } dnsQuery;
 
+#pragma pack(push, 1)
+typedef struct DNSRR
+{
+    unsigned short type;
+    unsigned short classes;
+    unsigned int ttl;
+    unsigned short data_length;
+} dnsRR;
+#pragma pack(pop)
+
 /**
  * 将域名以二进制数据转换为字符串形式（带.）
  */
@@ -90,23 +100,34 @@ int lookup_int_text(char *dn, char *ip)
             }
         }
         strcpy(domainName, ipAddr + strlen(ipAddr) + 1);
+        if (domainName[strlen(domainName) - 1] == '\n')
+            domainName[strlen(domainName) - 1] = '\0';
+        else
+            domainName[strlen(domainName)] = '\0';
         
+
+        //printf("111:%s!\n", domainName);
+        //printf("222:%s!\n", dn);
+        //printf("333:%d\n", strcmp(dn, domainName));
         // 找到了域名，得到ip地址
+
         if (strcmp(dn, domainName) == 0) {
 
             // 得到ip地址
             char *h = ipAddr;
             char *p = ipAddr;
             int i = 0;
-            while (p != '\0') {
+            //printf("%s\n", ipAddr);
+            while (*p != '\0') {
                 if (*p == '.') {
                     *p = '\0';
-                    ip[i] = atoi(h);
+                    ip[i] = (char)atoi(h);
+                    i++;
                     h = p + 1;
                 }
                 p++;
             }
-
+            ip[i] = atoi(h);
             flag = 1;
             return flag;
         }
@@ -120,19 +141,23 @@ int lookup_int_text(char *dn, char *ip)
 void creat_msg_manully(char *buf, char *ip)
 {
     dnsHeader *header = (dnsHeader *)buf;
-    header->flags = htons(0x0100);
+    dnsRR *rr;
+    header->flags = htons(0x8180);
     header->ansNumber = htons(1);
     char *dn = buf + sizeof(dnsHeader);
-    char *name = buf + sizeof(dnsHeader) + sizeof(dn) + sizeof(dnsQuery);
-    *name = htons((unsigned short)0xC00C);
-    dnsQuery *query = (dnsQuery *)(name + 2);
-    query->type = htons((unsigned short)1);
-    query->classes = htons((unsigned short)1);
-    char *TTL = name + 2 + sizeof(dnsQuery);
-    *TTL = htons((unsigned int)0xFFF);
-    char *data_length = TTL + 4;
-    *data_length = htons((unsigned short)4);
-    char *data = data_length + 2;
+    //printf("%lu\n", strlen(dn));
+    //dnsQuery *query = (dnsQuery *)(dn + strlen(dn) + 1);
+    //query->type = htons((unsigned short)1);
+    //query->classes = htons((unsigned short)1);
+    char *name = dn + strlen(dn) + 1 + sizeof(dnsQuery);
+    unsigned short *_name = (unsigned short *)name;
+    *_name = htons((unsigned short)0xC00C);
+    rr = (dnsRR *)(name + 2);
+    rr->type = htons(1);
+    rr->classes = htons(1);
+    rr->ttl = htons(0xFFF);
+    rr->data_length = htons(4);
+    char *data = (char *)rr + 10;
     *data = *ip;
     *(data + 1) = *(ip + 1);
     *(data + 2) = *(ip + 2);
@@ -217,8 +242,10 @@ void dns_relay()
         strcpy(temp, buf + sizeof(dnsHeader) + 1);
         to_domain_name(temp);
         int find_dn_ip = lookup_int_text(temp, ip);
+        printf("find: %d\n", find_dn_ip);
         free(temp);
-        
+        printf("%u.%u.%u.%u\n", *ip & 0x000000ff, *(ip + 1) & 0x000000ff, *(ip + 2) & 0x000000ff, *(ip + 3) & 0x000000ff);
+
         /**
          * 在 IP - 域名 对照表中找到，手动构造响应报文
          */
