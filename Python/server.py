@@ -46,17 +46,19 @@ class DNSHandler(socketserver.BaseRequestHandler):
             out += "RESULT: %s\n" % dns_server.response['answer']['ARDATA']
             out += "====================================================================\n"
         elif output_level == 2:
-            out = "#REQUEST#\n"
+            out = "Client: %s:%s\n" % (self.client_address[0], self.client_address[1])
+            out += "#REQUEST#\n"
             out += "Header:\n"
             out += "ID: %-5s\tFlags: %-5s\nQDCOUNT: %-2s\tANCOUNT: %-2s\tNSCOUNT: %-2s\tARCOUNT: %-2s\n" % (
                 dns_server.request['header']['ID'], dns_server.request['header']['FLAGS'],
                 dns_server.request['header']['QDCOUNT'], dns_server.request['header']['ANCOUNT'],
                 dns_server.request['header']['NSCOUNT'], dns_server.request['header']['ARCOUNT'])
             out += "Question:\n"
-            out += "QNAME: %s\nQTYPE: %-5s %-5s\tQCLASS: %s\n" % (
+            out += "QNAME: %s\nQTYPE: %-5s %-5s\tQCLASS: %s\tRCODE: %s\n" % (
                 dns_server.request['question']['QNAME'], dns_server.request['question']['QTYPE'],
                 dns_server.transFlag('TYPE', dns_server.request['question']['QTYPE']),
-                dns_server.transFlag('CLASS', dns_server.request['question']['QCLASS']))
+                dns_server.transFlag('CLASS', dns_server.request['question']['QCLASS']),
+                dns_server.transFlag('RCODE', dns_server.request['flags']['RCODE']))
             out += '\n#RESPONSE#\n'
             out += "Header:\n"
             out += "ID: %-5s\tFlags: %-5s\nQDCOUNT: %-2s\tANCOUNT: %-2s\tNSCOUNT: %-2s\tARCOUNT: %-2s\n" % (
@@ -64,17 +66,19 @@ class DNSHandler(socketserver.BaseRequestHandler):
                 dns_server.response['header']['QDCOUNT'], dns_server.response['header']['ANCOUNT'],
                 dns_server.response['header']['NSCOUNT'], dns_server.response['header']['ARCOUNT'])
             out += "Question:\n"
-            out += "QNAME: %s\nQTYPE: %-5s %-5s\tQCLASS: %s\n" % (
+            out += "QNAME: %s\nQTYPE: %-5s %-5s\tQCLASS: %s\tRCODE: %s\n" % (
                 dns_server.response['question']['QNAME'], dns_server.response['question']['QTYPE'],
                 dns_server.transFlag('TYPE', dns_server.response['question']['QTYPE']),
-                dns_server.transFlag('CLASS', dns_server.response['question']['QCLASS']))
-            out += "Answer:\n"
-            out += "ANAME: %s\nATYPE: %-5s %-5s\tACLASS: %-2s\tATTL: %-5s\tARDLENGTH: %-2s\n" % (
-                dns_server.response['answer']['ANAME'], dns_server.response['answer']['ATYPE'],
-                dns_server.transFlag('TYPE', dns_server.response['answer']['ATYPE']),
-                dns_server.response['answer']['ACLASS'], dns_server.response['answer']['ATTL'],
-                dns_server.response['answer']['ARDLENGTH'])
-            out += "ARDATA: %s\n" % dns_server.response['answer']['ARDATA']
+                dns_server.transFlag('CLASS', dns_server.response['question']['QCLASS']),
+                dns_server.transFlag('RCODE', dns_server.response['flags']['RCODE']))
+            if dns_server.response['answer']['ANAME']:
+                out += "Answer:\n"
+                out += "ANAME: %s\nATYPE: %-5s %-5s\tACLASS: %-2s\tATTL: %-5s\tARDLENGTH: %-2s\n" % (
+                    dns_server.response['answer']['ANAME'], dns_server.response['answer']['ATYPE'],
+                    dns_server.transFlag('TYPE', dns_server.response['answer']['ATYPE']),
+                    dns_server.response['answer']['ACLASS'], dns_server.response['answer']['ATTL'],
+                    dns_server.response['answer']['ARDLENGTH'])
+                out += "ARDATA: %s\n" % dns_server.response['answer']['ARDATA']
             out += "====================================================================\n"
         
         sys.stdout.write(out)
@@ -83,6 +87,6 @@ class DNSHandler(socketserver.BaseRequestHandler):
         request_socket.sendto(dns_server.response['data'], self.client_address)
         
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 53
+    HOST, PORT = "127.0.0.1", 53
     server = socketserver.ThreadingUDPServer((HOST, PORT), DNSHandler)          # 启动多线程 UDP 服务器
     server.serve_forever()

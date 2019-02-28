@@ -150,12 +150,14 @@ class DNSResolver():
     # 报文 Answer 解析
     def parseDNSAnswer(self, bytes_data):
         try:
+            if self.response['flags'] == 0:
+                return dict(ANAME=0, ATYPE=0, ACLASS=0, ATTL=0, ARDLENGTH=0, ARDATA='0.0.0.0')
             (answer_qtype, answer_qclass, answer_ttl, answer_rdlength, 
             answer_data_1, answer_data_2, answer_data_3, answer_data_4) = struct.unpack('>HHLHBBBB', bytes_data[-14:])
             return dict(ANAME=49164, ATYPE=answer_qtype, ACLASS=answer_qclass, ATTL=answer_ttl, ARDLENGTH=answer_rdlength, 
             ARDATA=str(answer_data_1) + '.' + str(answer_data_2) + '.' + str(answer_data_3) + '.' + str(answer_data_4))
         except:
-            return {}
+            return dict(ANAME=0, ATYPE=0, ACLASS=0, ATTL=0, ARDLENGTH=0, ARDATA='0.0.0.0')
 
     # 本地对照表查询
     def queryLocalServer(self, local_file):
