@@ -16,7 +16,7 @@ typedef struct DNSHEADER
     /**
      * flags(2 Bytes):cd
      * QR : 1 bit               0查询 / 1响应
-     * Opcode : 4 bits          0标准查询 / 1反向查询 / 2服务器状态请求
+     * Opcode : 4 bit           0标准查询 / 1反向查询 / 2服务器状态请求
      * AA : 1 bit               表示授权回答
      * TC : 1 bit               表示可以截断
      * RD : 1 bit               表示期望递归查询
@@ -114,7 +114,7 @@ void dns_relay()
      */
 
     // 持续运行
-    int len = sizeof(clt);
+    unsigned int len = sizeof(clt);
     while(1) {
 
         /**
@@ -133,10 +133,10 @@ void dns_relay()
         print_ipaddr(temp);
 
         /**
-         * srvAddr : 查询用DNS服务器地址
-         * 生成srvAddr的socket
+         * DnsSrvAddr : 查询用DNS服务器地址
+         * 生成DnsSrvAddr的socket
          */
-        struct sockaddr_in srvAddr;
+        struct sockaddr_in DnsSrvAddr;
         int fd = socket(AF_INET, SOCK_DGRAM, 0);
         if (fd < 0) {
             perror("socket error\n");
@@ -146,18 +146,18 @@ void dns_relay()
         /**
          * 配置查询用DNS服务器地址
          */
-        bzero(&srvAddr, sizeof(srvAddr));   
-        srvAddr.sin_family = AF_INET;       
-        inet_aton(SRV_IPADDR, &srvAddr.sin_addr); 
-        srvAddr.sin_port = htons(PORT);         
+        bzero(&DnsSrvAddr, sizeof(DnsSrvAddr));   
+        DnsSrvAddr.sin_family = AF_INET;       
+        inet_aton(SRV_IPADDR, &DnsSrvAddr.sin_addr); 
+        DnsSrvAddr.sin_port = htons(PORT);         
 
         /**
          * 向查询用DNS服务器地址发送查询报文
          * 并从其处接收响应报文
          */
-        int i = sizeof(srvAddr);
-        len = sendto(fd, buf, BUFFER_SIZE, 0, (struct sockaddr*)&srvAddr, sizeof(srvAddr));
-        len = recvfrom(fd, buf, BUFFER_SIZE, 0, (struct sockaddr*)&srvAddr, &i);
+        unsigned int i = sizeof(DnsSrvAddr);
+        len = sendto(fd, buf, BUFFER_SIZE, 0, (struct sockaddr*)&DnsSrvAddr, sizeof(DnsSrvAddr));
+        len = recvfrom(fd, buf, BUFFER_SIZE, 0, (struct sockaddr*)&DnsSrvAddr, &i);
         if (len < 0) {
             printf("recv error\n");
             exit(1);
