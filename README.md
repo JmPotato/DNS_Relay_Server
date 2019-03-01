@@ -7,4 +7,4 @@ Yet another another DNS relay server.
 - 域名屏蔽功能 √
 - 多线程 √
 - 服务器持续运行 √
-- **<font color=red>解决ID冲突</font> ×**
+- **解决ID冲突 ×**
