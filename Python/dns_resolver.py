@@ -151,7 +151,7 @@ class DNSResolver():
     # 报文 Answer 解析
     def parseDNSAnswer(self, bytes_data):
         try:
-            if self.parseFlags(self.response_data)['RCODE'] != 0:
+            if self.response['header']['ANCOUNT'] == 0:
                 return dict(ANAME=0, ATYPE=0, ACLASS=0, ATTL=0, ARDLENGTH=0, ARDATA='0.0.0.0')
             (answer_qtype, answer_qclass, answer_ttl, answer_rdlength, 
             answer_data_1, answer_data_2, answer_data_3, answer_data_4) = struct.unpack('>HHLHBBBB', bytes_data[-14:])
@@ -167,10 +167,14 @@ class DNSResolver():
             try:
                 with open('./' + local_file, 'r') as rule_file:
                     for rule in rule_file.readlines():
-                        if rule.strip().split(' ')[1] == self.request['question']['QNAME']:
-                            self.ip_result = rule.split(' ')[0]
-                            break
-            except:
+                        try:
+                            entry = rule.strip().split(' ')
+                            if entry[1] == self.request['question']['QNAME']:
+                                self.ip_result = entry[0]
+                                break
+                        except:
+                            continue
+            except FileNotFoundError:
                 self.ip_result = ''
 
         # 区分查询成功失败情况
@@ -202,7 +206,7 @@ class DNSResolver():
     # 综合查询函数
     def queryIntegratedServer(self, local_file, remote_server):
         response_data = self.queryLocalServer(local_file)           # 先进行本地查询
-        if self.request['question']['QTYPE'] == 1 and self.ip_result == '':
+        if self.ip_result == '':
             response_data = self.queryRemoteServer(remote_server)       # 本地未查询到记录后转发远程服务器查询
 
         return response_data
