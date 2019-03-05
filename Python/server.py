@@ -71,7 +71,7 @@ class DNSHandler(socketserver.BaseRequestHandler):
                 dns_server.transFlag('TYPE', dns_server.response['question']['QTYPE']),
                 dns_server.transFlag('CLASS', dns_server.response['question']['QCLASS']),
                 dns_server.transFlag('RCODE', dns_server.response['flags']['RCODE']))
-            if dns_server.response['answer']['ANAME']:
+            if dns_server.response['header']['ANCOUNT']:
                 out += "Answer:\n"
                 out += "ANAME: %s\nATYPE: %-5s %-5s\tACLASS: %-2s\tATTL: %-5s\tARDLENGTH: %-2s\n" % (
                     dns_server.response['answer']['ANAME'], dns_server.response['answer']['ATYPE'],

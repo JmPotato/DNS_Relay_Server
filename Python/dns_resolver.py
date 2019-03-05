@@ -151,7 +151,7 @@ class DNSResolver():
     # 报文 Answer 解析
     def parseDNSAnswer(self, bytes_data):
         try:
-            if self.response['header']['ANCOUNT'] == 0:
+            if self.parseDNSHeader(bytes_data)['ANCOUNT'] == 0:
                 return dict(ANAME=0, ATYPE=0, ACLASS=0, ATTL=0, ARDLENGTH=0, ARDATA='0.0.0.0')
             (answer_qtype, answer_qclass, answer_ttl, answer_rdlength, 
             answer_data_1, answer_data_2, answer_data_3, answer_data_4) = struct.unpack('>HHLHBBBB', bytes_data[-14:])
