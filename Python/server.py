@@ -8,18 +8,14 @@ from dns_resolver import DNSResolver
 # Socket 服务器 Handler
 class DNSHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        output_level = 0
+        output_level = 1
         local_file = 'dnsrelay.txt'         # 默认本地查询表文件名
         remote_server = '223.5.5.5'         # 默认远程转发服务器地址（阿里云 DNS）
         try:
             opts, args = getopt.getopt(sys.argv[1:], 'ho:f:s:', ['help', 'output=', 'filename=', 'server='])
-            for opt, arg in opts: 
-                # -h 或 --help 获得命令行使用帮助 
-                if opt in ("-h", "--help"):
-                    print("Usage:\ndnsrelay -d [0|1|2] -f [filename] -s [dns_server_upaddr]")
-                    sys.exit(1)
+            for opt, arg in opts:
                 # -o 或 --output 获得输出信息，分为 0|1|2 三个等级
-                elif opt in ("-o", "--output"):
+                if opt in ("-o", "--output"):
                     output_level = int(arg)
                 # -f 或 --filename 指定本地查询表文件
                 elif opt in ("-f", "--filename"):
@@ -28,7 +24,7 @@ class DNSHandler(socketserver.BaseRequestHandler):
                 elif opt in ("-s", "--server"):
                     remote_server = arg
         except getopt.GetoptError:
-            print("Usage:\ndnsrelay -d [0|1|2] -f [filename] -s [dns_server_upaddr]")
+            print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")
             sys.exit(1)
 
         request_data = self.request[0].strip()          # 接收二进制 DNS 查询报文数据
@@ -45,7 +41,7 @@ class DNSHandler(socketserver.BaseRequestHandler):
                 dns_server.transFlag('RCODE', dns_server.response['flags']['RCODE']))
             out += "RESULT: %s\n" % dns_server.response['answer']['ARDATA']
             out += "====================================================================\n"
-        elif output_level == 2:
+        else:
             out = "Client: %s:%s\n" % (self.client_address[0], self.client_address[1])
             out += "#REQUEST#\n"
             out += "Header:\n"
@@ -87,6 +83,16 @@ class DNSHandler(socketserver.BaseRequestHandler):
         request_socket.sendto(dns_server.response['data'], self.client_address)
         
 if __name__ == "__main__":
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'ho:f:s:', ['help', 'output=', 'filename=', 'server='])
+        for opt, arg in opts: 
+            # -h 或 --help 获得命令行使用帮助 
+            if opt in ("-h", "--help"):
+                print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")
+                sys.exit(1)
+    except getopt.GetoptError:
+        print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")
+        sys.exit(1)
     HOST, PORT = "127.0.0.1", 53
     server = socketserver.ThreadingUDPServer((HOST, PORT), DNSHandler)          # 启动多线程 UDP 服务器
     server.serve_forever()
