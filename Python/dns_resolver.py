@@ -116,15 +116,17 @@ class DNSResolver():
         # 还原出正常的字符串域名
         try:
             question_qname = ''
-            count = 13
-            for i in bytes_data[13:]:
+            length = bytes_data[12]
+            index = 12
+            count = 1
+            while(count <= length):
+                question_qname += chr(bytes_data[index+count])
                 count += 1
-                if i < 32 and i != 0:
+                if(count > length and bytes_data[index+count] != 0):
                     question_qname += '.'
-                elif i != 0:
-                    question_qname += chr(i)
-                elif i == 0:
-                    break
+                    length = bytes_data[index+count]
+                    index = index + count
+                    count = 1
             (question_qtype, question_qclass) = struct.unpack('>HH', bytes_data[count:count+4])
             return dict(QNAME=question_qname, QTYPE=question_qtype, QCLASS=question_qclass)
         except:
