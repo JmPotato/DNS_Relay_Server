@@ -127,7 +127,7 @@ class DNSResolver():
                     length = bytes_data[index+count]
                     index = index + count
                     count = 1
-            (question_qtype, question_qclass) = struct.unpack('>HH', bytes_data[count:count+4])
+            (question_qtype, question_qclass) = struct.unpack('>HH', bytes_data[index+count+1:index+count+1+4])
             return dict(QNAME=question_qname, QTYPE=question_qtype, QCLASS=question_qclass)
         except:
             return {}
