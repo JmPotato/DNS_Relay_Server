@@ -1,5 +1,4 @@
 import sys
-import struct           #处理字节流的模块，用于将字节流转化为整数类型
 import getopt           #解析命令行参数的模块
 import socketserver     #多线程服务器
 
