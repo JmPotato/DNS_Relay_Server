@@ -1,30 +1,30 @@
 import sys
-import struct
-import getopt
-import socketserver
+import struct           #处理字节流的模块，用于将字节流转化为整数类型
+import getopt           #解析命令行参数的模块
+import socketserver     #多线程服务器
 
-from dns_resolver import DNSResolver
+from dns_resolver import DNSResolver    #导入dns_resolver类中的DNSResolver类，用来进行DNS报文的解析和查询
 
 # Socket 服务器 Handler
 class DNSHandler(socketserver.BaseRequestHandler):
     def handle(self):
-        output_level = 1
+        output_level = 1                    # 默认输出等级为1
         local_file = 'dnsrelay.txt'         # 默认本地查询表文件名
-        remote_server = '223.5.5.5'         # 默认远程转发服务器地址（阿里云 DNS）
+        remote_server = '223.5.5.5'         # 默认远程转发服务器地址（阿里云DNS服务器）
         try:
-            opts, args = getopt.getopt(sys.argv[1:], 'ho:f:s:', ['help', 'output=', 'filename=', 'server='])
-            for opt, arg in opts:
-                # -o 或 --output 获得输出信息，分为 0|1|2 三个等级
+            opts, args = getopt.getopt(sys.argv[1:], 'ho:f:s:', ['help', 'output=', 'filename=', 'server='])  #获取命令行参数，过滤掉第一个参数(脚本的文件名)
+            for opt, arg in opts:  #opts是一个两元组的列表。每个元素为：(选项串,附加参数)
+                # -o 或 --output 获得输出信息，分为 1|2 两个等级
                 if opt in ("-o", "--output"):
                     output_level = int(arg)
-                # -f 或 --filename 指定本地查询表文件
+                # -f 或 --filename 指定本地查询的对照表文件
                 elif opt in ("-f", "--filename"):
                     local_file = arg
-                # -s 或 --server 指定远程查询服务器地址
+                # -s 或 --server 指定远程查询DNS服务器地址
                 elif opt in ("-s", "--server"):
                     remote_server = arg
-        except getopt.GetoptError:
-            print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")
+        except getopt.GetoptError: 
+            print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")  #打印使用方法，并退出
             sys.exit(1)
 
         request_data = self.request[0].strip()          # 接收二进制 DNS 查询报文数据
@@ -33,15 +33,15 @@ class DNSHandler(socketserver.BaseRequestHandler):
         # 进行 DNS 解析和查询
         dns_server = DNSResolver(request_data, local_file, remote_server)
 
-        # 在屏幕上实时打印输出信息
-        if output_level == 1:
+        # 在屏幕上实时打印报文的信息
+        if output_level == 1:  #调试输出级别为1
             out = "QNAME: %s\nQTYPE: %-5s %-5s\tRCODE: %s\n" % (dns_server.request['question']['QNAME'],
                 dns_server.request['question']['QTYPE'],
                 dns_server.transFlag('TYPE', dns_server.request['question']['QTYPE']),
                 dns_server.transFlag('RCODE', dns_server.response['flags']['RCODE']))
             out += "RESULT: %s\n" % dns_server.response['answer']['ARDATA']
             out += "====================================================================\n"
-        else:
+        else:                  #调试输出级别为2
             out = "Client: %s:%s\n" % (self.client_address[0], self.client_address[1])
             out += "#REQUEST#\n"
             out += "Header:\n"
@@ -77,12 +77,12 @@ class DNSHandler(socketserver.BaseRequestHandler):
                 out += "ARDATA: %s\n" % dns_server.response['answer']['ARDATA']
             out += "====================================================================\n"
         
-        sys.stdout.write(out)
+        sys.stdout.write(out)  #报文信息打印到控制台
 
-        # 回传响应报文，完成 DNS 查询与中转
+        # 回传响应报文，完成DNS查询与中转
         request_socket.sendto(dns_server.response['data'], self.client_address)
         
-if __name__ == "__main__":
+if __name__ == "__main__": 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'ho:f:s:', ['help', 'output=', 'filename=', 'server='])
         for opt, arg in opts: 
@@ -91,8 +91,8 @@ if __name__ == "__main__":
                 print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")
                 sys.exit(1)
     except getopt.GetoptError:
-        print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")
+        print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]") #打印使用方法，并退出
         sys.exit(1)
     HOST, PORT = "127.0.0.1", 53
-    server = socketserver.ThreadingUDPServer((HOST, PORT), DNSHandler)          # 启动多线程 UDP 服务器
-    server.serve_forever()
+    server = socketserver.ThreadingUDPServer((HOST, PORT), DNSHandler)  #启动多线程 UDP 服务器，每个客户端请求连接到服务器时，服务器都会创建新线程专门负责处理当前客户端的所有请求。
+    server.serve_forever()                                              #循环，持续不断监听端口
