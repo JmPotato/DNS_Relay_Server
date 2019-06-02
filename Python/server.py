@@ -55,6 +55,10 @@ class DNSHandler(socketserver.BaseRequestHandler):
                 dns_server.transFlag('CLASS', dns_server.request['question']['QCLASS']),
                 dns_server.transFlag('RCODE', dns_server.request['flags']['RCODE']))
             out += '\n#RESPONSE#\n'
+            out += 'DATA:\n'
+            for byte in dns_server.response_data:
+                out += str(hex(byte)) + ' '
+            out += '\n'
             out += "Header:\n"
             out += "ID: %-5s\tFlags: %-5s\nQDCOUNT: %-2s\tANCOUNT: %-2s\tNSCOUNT: %-2s\tARCOUNT: %-2s\n" % (
                 dns_server.response['header']['ID'], dns_server.response['header']['FLAGS'],
