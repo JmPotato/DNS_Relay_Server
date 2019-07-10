@@ -26,7 +26,7 @@ class DNSHandler(socketserver.BaseRequestHandler):
             print("Usage:\n -o [1|2] -f [filename] -s [dns_server_upaddr]")  #打印使用方法，并退出
             sys.exit(1)
 
-        request_data = self.request[0].strip()          # 接收二进制 DNS 查询报文数据
+        request_data = self.request[0]                  # 接收二进制 DNS 查询报文数据
         request_socket = self.request[1]                # 保存本次 Socket 链接信息，用于回传响应报文
 
         # 进行 DNS 解析和查询
@@ -55,10 +55,6 @@ class DNSHandler(socketserver.BaseRequestHandler):
                 dns_server.transFlag('CLASS', dns_server.request['question']['QCLASS']),
                 dns_server.transFlag('RCODE', dns_server.request['flags']['RCODE']))
             out += '\n#RESPONSE#\n'
-            out += 'DATA:\n'
-            for byte in dns_server.response_data:
-                out += str(hex(byte)) + ' '
-            out += '\n'
             out += "Header:\n"
             out += "ID: %-5s\tFlags: %-5s\nQDCOUNT: %-2s\tANCOUNT: %-2s\tNSCOUNT: %-2s\tARCOUNT: %-2s\n" % (
                 dns_server.response['header']['ID'], dns_server.response['header']['FLAGS'],
